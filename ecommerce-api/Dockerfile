@@ -1,27 +1,21 @@
-# Använd en Node.js-bild
+# Use Node.js LTS version
 FROM node:18
 
-# Skapa arbetsmapp i containern
+# Create and set working directory
 WORKDIR /app
 
-# Install tsx globally
-RUN npm install -g tsx
-
-# Kopiera package.json och package-lock.json först (för att optimera caching)
+# Copy package files
 COPY package*.json ./
 
-# Installera dependencies med clean install
-RUN npm ci
+# Install dependencies
+RUN npm install
 
-# Kopiera hela projektet (inkl. public-mappen)
-COPY . . 
+# Copy source code
+COPY . .
 
-# Kopiera public-mappen separat för säkerhets skull
-COPY public /app/public
-
-# Exponera port 3000
+# Expose port
 EXPOSE 3000
 
-# Starta API:t
+# Command to run the application
 CMD ["npm", "run", "dev"]
 

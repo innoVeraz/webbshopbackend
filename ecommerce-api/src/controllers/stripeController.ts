@@ -60,14 +60,37 @@ export const handleWebhook = async (req: Request, res: Response) => {
       console.log('Processing completed checkout for order:', orderId);
 
       if (orderId) {
-        const sql = `
+        // 1. Uppdatera ordern
+        const updateOrderSql = `
           UPDATE orders 
           SET payment_status = ?, payment_id = ?, order_status = ?
           WHERE id = ?
         `;
-        const params = ['paid', session.payment_intent, 'confirmed', orderId];
-        await db.query(sql, params);
-        console.log('Order updated successfully:', orderId);
+        await db.query(updateOrderSql, ['paid', session.payment_intent, 'received', orderId]);
+
+        // 2. Hämta orderdetaljerna för att uppdatera lagersaldo
+        const getOrderItemsSql = `
+          SELECT product_id, quantity 
+          FROM order_items 
+          WHERE order_id = ?
+        `;
+        const [orderItems] = await db.query(getOrderItemsSql, [orderId]);
+
+        // 3. Uppdatera lagersaldo för varje produkt
+        for (const item of orderItems) {
+          const updateStockSql = `
+            UPDATE products 
+            SET stock_quantity = stock_quantity - ? 
+            WHERE id = ? AND stock_quantity >= ?
+          `;
+          await db.query(updateStockSql, [
+            item.quantity,
+            item.product_id,
+            item.quantity
+          ]);
+        }
+
+        console.log('Order and inventory updated successfully:', orderId);
       }
     }
 

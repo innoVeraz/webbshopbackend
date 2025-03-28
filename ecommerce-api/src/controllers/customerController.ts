@@ -29,6 +29,20 @@ export const getCustomerById = async (req: Request, res: Response) => {
   }
 }
 
+export const getCustomerByEmail = async (req: Request, res: Response) => { 
+  const email: string = req.params.email;
+  
+  try {
+    const sql = "SELECT * FROM customers WHERE email = ?";
+    const [rows] = await db.query<ICustomer[]>(sql, [email])
+    rows && rows.length > 0
+      ? res.json(rows[0])
+      : res.status(404).json({message: 'Customer not found'})
+  } catch (error) {
+    res.status(500).json({error: logError(error)})
+  }
+}
+
 export const createCustomer = async (req: Request, res: Response) => {
   const { firstname, lastname, email, password, phone, street_address, postal_code, city, country }: ICustomer = req.body;
   

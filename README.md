@@ -1,388 +1,164 @@
-# Instructions
+# E-shop Backend API
 
-## Watch the recorded lesson
-In the recorded lesson we go through:
-- ER-diagram to understand the DB tables and the relations between them 
-- MySQL in PHPMyAdmin/XAMPP
-- The Ecommerce API code.
-- Testing the following endpoints of the API, in Insomnia:
+Detta är backend-delen av e-handelsapplikationen, byggd med Node.js, Express, och MySQL. Projektet använder Docker för enkel installation och körning.
 
+## Förutsättningar
 
-## API Docs 
-- [PRODUCTS endpoints](https://github.com/sibala/System-och-integration-FSU24D/tree/main/06-lecture#products-endpoints)
-- [CUSTOMERS endpoints](https://github.com/sibala/System-och-integration-FSU24D/tree/main/06-lecture#customers-endpoints)
-- [ORDERS endpoints](https://github.com/sibala/System-och-integration-FSU24D/tree/main/06-lecture#orders-endpoints)
-- [ORDER ITEMS endpoints](https://github.com/sibala/System-och-integration-FSU24D/tree/main/06-lecture#order_items-endpoints)
+- Docker och Docker Compose
+- Node.js (om du vill köra utan Docker)
+- Stripe CLI (för webhook-utveckling)
 
-### PRODUCTS endpoints
+## Installation och körning med Docker
 
-  - [GET]    http://localhost:3000/products
----
+1. Klona projektet
+```bash
+git clone <repository-url>
+cd webbshopbackend/ecommerce-api
+```
 
->Request JSON Body:
-`None`
+2. Skapa en .env fil i ecommerce-api mappen med följande innehåll:
+```env
+DB_HOST=db
+DB_USER=root
+DB_PASSWORD=example
+DB_NAME=ecommerce
+PORT=3000
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+```
 
->Response JSON Body:
-``` 
-[
-  {
-    "id": 9,
-    "name": "Product name",
-    "description": "Desc...",
-    "price": 423,
-    "stock": 234,
-    "category": "Graduation Cake",
-    "image": "image url",
-    "created_at": "2025-03-11T13:59:05.000Z"
-  }
-]
-``` 
+3. Starta Docker-containrarna
+```bash
+docker-compose up --build
+```
 
+API:et kommer nu vara tillgängligt på [http://localhost:3000](http://localhost:3000)
 
-  - [GET]    http://localhost:3000/products/:id
----
->Request JSON Body: 
-`None`
+## Installation utan Docker
 
->Response JSON Body:
-``` 
-{
-  "id": 9,
-  "name": "Product name",
-  "description": "Desc...",
-  "price": 423,
-  "stock": 234,
-  "category": "Graduation Cake",
-  "image": "image url",
-  "created_at": "2025-03-11T13:59:05.000Z"
-}
-``` 
-  - [POST]   http://localhost:3000/products
----
->Request JSON Body:
-``` 
-{
-  "name": "Product name",
-  "description": "Desc...",
-  "price": 423,
-  "stock": 234,
-  "category": "Graduation Cake",
-  "image": "image url",
-}
-``` 
+1. Se till att du har en MySQL-server igång
+2. Uppdatera .env filen med dina databasuppgifter:
+```env
+DB_HOST=localhost
+DB_USER=din_användare
+DB_PASSWORD=ditt_lösenord
+DB_NAME=ecommerce
+PORT=3000
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+```
 
+3. Installera dependencies
+```bash
+npm install
+```
 
->Response JSON Body:
-``` 
-{
-  message: "Product created"
-  id: 2
-}
-``` 
-  - [PATCH]  http://localhost:3000/products/:id
----
->Request JSON Body:
-``` 
-{
-  "name": "Product name",
-  "description": "Desc...",
-  "price": 423,
-  "stock": 234,
-  "category": "Graduation Cake",
-  "image": "image url",
-}
-``` 
+4. Kör databasens migrations
+```bash
+mysql -u root -p ecommerce < ecommerce.sql
+```
 
->Response JSON Body:
-``` 
-{
-  message: "Product updated"
-}
-``` 
-  - [DELETE] http://localhost:3000/products/:id
----
->Request JSON Body:
-`None`
+5. Starta servern
+```bash
+npm run dev
+```
 
->Response JSON Body:
-``` 
-{
-  message: "Product deleted"
-}
-``` 
+## Stripe Integration
 
-### CUSTOMERS endpoints
+### Konfigurera Stripe
 
-- [GET]    http://localhost:3000/customers
----
+1. Skapa ett Stripe-konto om du inte har ett
+2. Gå till Stripe Dashboard och hämta dina API-nycklar
+3. Uppdatera .env med dina Stripe-nycklar
 
->Request JSON Body:
-`None`
+### Konfigurera Webhooks
 
->Response JSON Body:
-``` 
-[
-  {
-    "id": 1,
-    "firstname": "John",
-    "lastname": "Doe",
-    "email": "john.doe@gmail.com",
-    "password": "234",
-    "phone": "53451234",
-    "street_address": "Street 123",
-    "postal_code": "Postal code",
-    "city": "City",
-    "country": "Country",
-    "created_at": "2025-03-07T07:25:02.000Z"
-  }
-]
-``` 
+1. Installera Stripe CLI: https://stripe.com/docs/stripe-cli
+2. Logga in med Stripe CLI:
+```bash
+stripe login
+```
 
+3. Starta webhook forwarding:
+```bash
+stripe listen --forward-to localhost:3000/stripe/webhook
+```
 
-  - [GET]    http://localhost:3000/customers/:id
----
->Request JSON Body: 
-`None`
+4. Kopiera webhook-signing secret och lägg till i .env
 
->Response JSON Body:
-``` 
-{
-  "id": 1,
-  "firstname": "John",
-  "lastname": "Doe",
-  "email": "john.doe@gmail.com",
-  "password": "234",
-  "phone": "53451234",
-  "street_address": "Street 123",
-  "postal_code": "Postal code",
-  "city": "City",
-  "country": "Country",
-  "created_at": "2025-03-07T07:25:02.000Z"
-}
-``` 
-  - [POST]   http://localhost:3000/customers
----
->Request JSON Body:
-``` 
-{
-  "firstname": "John",
-  "lastname": "Doe",
-  "email": "john.doe@gmail.com",
-  "password": "234",
-  "phone": "53451234",
-  "street_address": "Street 123",
-  "postal_code": "Postal code",
-  "city": "City",
-  "country": "Country",
-}
-``` 
+## API Endpoints
 
+### Products
+- GET /products - Hämta alla produkter
+- POST /products - Skapa ny produkt
+- GET /products/:id - Hämta specifik produkt
+- PATCH /products/:id - Uppdatera produkt
+- DELETE /products/:id - Ta bort produkt
 
->Response JSON Body:
-``` 
-{
-  message: "Customer created"
-  id: 3
-}
-``` 
-  - [PATCH]  http://localhost:3000/customers/:id
----
->Request JSON Body:
-``` 
-{
-  "firstname": "John",
-  "lastname": "Doe",
-  "email": "john.doe@gmail.com",
-  "password": "234",
-  "phone": "53451234",
-  "street_address": "Street 123",
-  "postal_code": "Postal code",
-  "city": "City",
-  "country": "Country",
-}
-``` 
+### Orders
+- GET /orders - Hämta alla ordrar
+- POST /orders - Skapa ny order
+- GET /orders/:id - Hämta specifik order
+- PATCH /orders/:id - Uppdatera order
+- DELETE /orders/:id - Ta bort order
+- GET /orders/payment/:id - Hämta order via payment_id
 
->Response JSON Body:
-``` 
-{
-  message: "Customer updated"
-}
-``` 
-  - [DELETE] http://localhost:3000/customers/:id
----
->Request JSON Body:
-`None`
+### Customers
+- GET /customers - Hämta alla kunder
+- POST /customers - Skapa ny kund
+- GET /customers/:id - Hämta specifik kund
+- GET /customers/email/:email - Hämta kund via email
+- PATCH /customers/:id - Uppdatera kund
+- DELETE /customers/:id - Ta bort kund
 
->Response JSON Body:
-``` 
-{
-  message: "Customer deleted"
-}
-``` 
+### Stripe
+- POST /stripe/create-checkout - Skapa checkout session
+- POST /stripe/webhook - Webhook endpoint
 
+## Docker-kommandon
 
-### ORDERS endpoints
-  - [GET]    http://localhost:3000/orders
----
+- Starta containrarna: `docker-compose up`
+- Starta i bakgrunden: `docker-compose up -d`
+- Stoppa containrarna: `docker-compose down`
+- Se loggar: `docker-compose logs -f`
+- Rebuilda: `docker-compose up --build`
 
->Request JSON Body:
-`None`
+## Databas
 
->Response JSON Body:
-``` 
-[
-  {
-    "id": 21,
-    "customer_id": 1,
-    "total_price": 1000,
-    "payment_status": "paid",
-    "payment_id": null,
-    "order_status": "Processing",
-    "created_at": "2025-03-10T08:52:55.000Z",
-    "customer_firstname": "John",
-    "customer_lastname": "Doe",
-    "customer_email": "john.doe@gmail.com",
-    "customer_phone": "5345",
-    "customer_street_address": "Street 123",
-    "customer_postal_code": "Postal code",
-    "customer_city": "City",
-    "customer_country": "Country",
-    "customers_created_at": "2025-03-07T07:25:02.000Z"
-  }
-]
-``` 
+MySQL-databasen körs i en separat container och är konfigurerad med följande:
+- Port: 3306 (mapped till host)
+- Root lösenord: example (ändra i produktionen!)
+- Databas: ecommerce
 
+### Databasstruktur
 
-  - [GET]    http://localhost:3000/orders/:id
----
+Databasen initieras automatiskt med tabeller för:
+- Products
+- Customers
+- Orders
+- Order_items
 
->Request JSON Body:
-`None`
+Se `ecommerce.sql` för fullständig databasstruktur.
 
->Response JSON Body:
-``` 
-{
-  "id": "25",
-  "customer_id": 1,
-  "total_price": 669,
-  "payment_status": "unpaid",
-  "payment_id": null,
-  "order_status": "pending",
-  "created_at": "2025-03-12T18:25:32.000Z",
-  "customer_firstname": "John",
-  "customer_lastname": "Doe",
-  "customer_email": "john.doe@gmail.com",
-  "customer_password": "234",
-  "customer_phone": "5345",
-  "customer_street_address": "Street 123",
-  "customer_postal_code": "Postal code",
-  "customer_city": "City",
-  "customer_country": "Country",
-  "order_items": [
-    {
-      "id": 51,
-      "product_id": 11,
-      "product_name": "Test product - changed",
-      "quantity": 3,
-      "unit_price": 100
-    },
-    {
-      "id": 52,
-      "product_id": 10,
-      "product_name": "qwe",
-      "quantity": 3,
-      "unit_price": 123
-    }
-  ]
-}
-``` 
-  - [POST]   http://localhost:3000/orders
----
->Request JSON Body:
-``` 
-{
-  "customer_id": 1,
-  "payment_status": "unpaid",
-  "payment_id": null,
-  "order_status": "pending",
-  "order_items": [
-    {
-      "product_id": 11,
-      "product_name": "Test product - changed",
-      "quantity": 3,
-      "unit_price": 100
-    },
-    {
-      "product_id": 10,
-      "product_name": "qwe",
-      "quantity": 3,
-      "unit_price": 123
-    }
-  ]
-}
-``` 
+## Utveckling
 
+### Logs
+Alla API-anrop och fel loggas i konsolen. I Docker kan du se loggarna med:
+```bash
+docker-compose logs -f api
+```
 
->Response JSON Body:
-``` 
-{
-  message: "Order created"
-  id: 5
-}
-``` 
-  - [PATCH]  http://localhost:3000/orders/:id
----
->Request JSON Body:
-``` 
-{
-  "payment_status": "paid",
-  "payment_id": "uh234hk2h3u423h42k34",
-  "order_status": "processing"
-}
-``` 
+### Debugging
+För att debugga i Docker, exponeras Node debugger på port 9229:
+1. Lägg till `debugger` i koden där du vill sätta en breakpoint
+2. Anslut din IDE till debug port 9229
 
->Response JSON Body:
-``` 
-{
-  message: "Order updated"
-}
-``` 
-  - [DELETE] http://localhost:3000/orders/:id
----
->Request JSON Body:
-`None`
+## Tester
+För att köra tester:
+```bash
+npm test
+```
 
->Response JSON Body:
-``` 
-{
-  message: "Order deleted"
-}
-``` 
-
-### ORDER_ITEMS endpoints
-  - [PATCH]  http://localhost:3000/order-items/:id
----
->Request JSON Body:
-``` 
-{
-  "quantity": 5,
-}
-``` 
-
->Response JSON Body:
-``` 
-{
-  message: "Order item updated"
-}
-``` 
-  - [DELETE] http://localhost:3000/order-items/:id
----
->Request JSON Body:
-`None`
-
->Response JSON Body:
-``` 
-{
-  message: "Order item deleted"
-}
-``` 
+I Docker:
+```bash
+docker-compose exec api npm test
