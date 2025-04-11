@@ -10,6 +10,7 @@ import { IUser } from "../models/IUser";
 export const login = async (req: Request, res: Response): Promise<void> => {
   let user: IUser | null = null;
   const { username, password} = req.body;
+  
   if (username === undefined || password === undefined) {
     res.status(400).json({success: false, message: "Missing required fields (username/password)"});
     return;
@@ -18,11 +19,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const sql = "SELECT * FROM users WHERE username = ?";
     const [rows] = await db.query<IUser[]>(sql, [username])
-
+    
     if (rows && rows.length > 0) {
       user = rows[0];
     } else {
-      res.status(404).json({message: 'User not found'});
+      res.status(404).json({success: false, message: 'User not found'});
       return;
     }
 
@@ -40,16 +41,17 @@ export const login = async (req: Request, res: Response): Promise<void> => {
           maxAge: 1000 * 60 * 60 * 24 * 7,
           path: '/auth/refresh-token'
       });
+      
       const accessToken = jwt.sign(userInfo, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '15m'});
-
       res.json({
+        success: true,
         user: {username: userInfo.username},
-        expires_in: 60 * 15, // 15 minutes
+        expires_in: 60 * 15,
         token: accessToken
       });
       return;
     } else {
-      res.sendStatus(401).json({success: false, message: "Incorrect user credentials"});
+      res.status(401).json({success: false, message: "Incorrect user credentials"});
       return;
     }  
   } catch (error) {

@@ -117,11 +117,11 @@ stripe listen --forward-to localhost:3000/stripe/webhook
 
 ## Docker-kommandon
 
-- Starta containrarna: `docker-compose up`
-- Starta i bakgrunden: `docker-compose up -d`
-- Stoppa containrarna: `docker-compose down`
-- Se loggar: `docker-compose logs -f`
-- Rebuilda: `docker-compose up --build`
+- Starta containrarna: `docker compose up`
+- Starta i bakgrunden: `docker compose up -d`
+- Stoppa containrarna: `docker compose down`
+- Se loggar: `docker compose logs -f`
+- Rebuilda: `docker compose up --build`
 
 ## Databas
 
