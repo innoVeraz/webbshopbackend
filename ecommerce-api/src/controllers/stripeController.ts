@@ -31,8 +31,13 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         orderId: orderId.toString(),
       },
     });
+    const updateOrderSql = `
+      UPDATE orders 
+      SET payment_id = ?
+      WHERE id = ?
+    `;
+    await db.query(updateOrderSql, [session.id, orderId]);
 
-    console.log('Checkout session created:', session.id);
     res.json({ url: session.url, sessionId: session.id });
   } catch (error: any) {
     console.error('Stripe session creation error:', error);
@@ -60,15 +65,13 @@ export const handleWebhook = async (req: Request, res: Response) => {
       console.log('Processing completed checkout for order:', orderId);
 
       if (orderId) {
-        // 1. Uppdatera ordern
         const updateOrderSql = `
           UPDATE orders 
-          SET payment_status = ?, payment_id = ?, order_status = ?
+          SET payment_status = ?, order_status = ?
           WHERE id = ?
         `;
-        await db.query(updateOrderSql, ['paid', session.payment_intent, 'received', orderId]);
+        await db.query(updateOrderSql, ['paid', 'received', orderId]);
 
-        // 2. Hämta orderdetaljerna för att uppdatera lagersaldo
         const getOrderItemsSql = `
           SELECT product_id, quantity 
           FROM order_items 
@@ -76,7 +79,6 @@ export const handleWebhook = async (req: Request, res: Response) => {
         `;
         const [orderItems] = await db.query(getOrderItemsSql, [orderId]);
 
-        // 3. Uppdatera lagersaldo för varje produkt
         for (const item of orderItems) {
           const updateStockSql = `
             UPDATE products 
