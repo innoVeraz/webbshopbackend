@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import express from "express";
-import { connectDB } from "../src/config/db"; 
+import { connectDB } from "../ecommerce-api/src/config/db"; 
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import path from 'path';
@@ -22,12 +22,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/public", express.static(path.join(__dirname, "../public")));
 
 // Importera routes från src
-import productRouter from "../src/routes/products";
-import customerRouter from "../src/routes/customers";
-import orderRouter from "../src/routes/orders";
-import orderItemRouter from "../src/routes/orderItems";
-import authRouter from "../src/routes/auth";
-import stripeRouter from "../src/routes/stripe";
+import productRouter from "../ecommerce-api/src/routes/products";
+import customerRouter from "../ecommerce-api/src/routes/customers";
+import orderRouter from "../ecommerce-api/src/routes/orders";
+import orderItemRouter from "../ecommerce-api/src/routes/orderItems";
+import authRouter from "../ecommerce-api/src/routes/auth";
+import stripeRouter from "../ecommerce-api/src/routes/stripe";
 
 // Lägg till en enkel testroute direkt i index.ts för felsökning
 app.get('/test', (req, res) => {
