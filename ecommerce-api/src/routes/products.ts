@@ -4,12 +4,11 @@ import {
   getProductById, 
   createProduct, 
   updateProduct, 
-  deleteProduct } from "../controllers/productController.ts";
+  deleteProduct } from "../controllers/productController";
 import multer from "multer";
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-
 const router = express.Router();
 
 router.get("/", getProducts)

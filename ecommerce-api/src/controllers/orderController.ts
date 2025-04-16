@@ -84,7 +84,8 @@ export const getOrderByPaymentId = async (req: Request, res: Response) => {
     const [rows] = await db.query<IOrder[]>(sql, [sessionId]);
     
     if (rows && rows.length > 0) {
-      res.json(formatOrderDetails(rows[0].id, rows));
+      const orderId = rows[0].id || 0; // Säkerställer att id aldrig är null
+      res.json(formatOrderDetails(orderId, rows));
     } else {
       res.status(404).json({message: 'Order not found'});
     }
@@ -93,7 +94,7 @@ export const getOrderByPaymentId = async (req: Request, res: Response) => {
   }
 };
 
-const formatOrderDetails = (orderId, rows) => ({
+const formatOrderDetails = (orderId: number | string, rows: any[]) => ({
   id: orderId,
   customer_id: rows[0].customer_id,
   total_price: rows[0].total_price,
@@ -110,7 +111,7 @@ const formatOrderDetails = (orderId, rows) => ({
   customer_postal_code: rows[0].postal_code,
   customer_city: rows[0].city,
   customer_country: rows[0].country,
-  order_items: rows[0].id ? rows.map(item => ({
+  order_items: rows[0].id ? rows.map((item: any) => ({
     id: item.id,
     product_id: item.product_id,
     product_name: item.product_name,
@@ -128,7 +129,7 @@ export const createOrder = async (req: Request, res: Response) => {
       VALUES (?, ?, ?, ?, ?)
     `;
 
-    const totalPrice = req.body.order_items.reduce((total, item) => total + (item.quantity * item.unit_price), 0);
+    const totalPrice = req.body.order_items.reduce((total: number, item: any) => total + (item.quantity * item.unit_price), 0);
     const params = [customer_id, totalPrice, payment_status, payment_id, order_status]
     const [result] = await db.query<ResultSetHeader>(sql, params)
     if (result.insertId) {

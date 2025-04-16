@@ -3,6 +3,9 @@ import { NextFunction, Request, RequestExtended, Response } from 'express';
 dotenv.config();
 import jwt from 'jsonwebtoken';
 
+// Säkerställ att JWT-secret finns
+const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET || 'fallback_secret_for_development';
+
 declare module 'express' {
   export interface RequestExtended extends Request {
     user?: any;
@@ -18,7 +21,7 @@ export const verifyAccessToken = (req: RequestExtended, res: Response, next: Nex
     return
   }
 
-  jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+  jwt.verify(accessToken, JWT_SECRET, (err: jwt.VerifyErrors | null, user: any) => {
     if (err) {
       res.sendStatus(403);
       return 
@@ -28,7 +31,6 @@ export const verifyAccessToken = (req: RequestExtended, res: Response, next: Nex
   })
 }
 
-
 export const verifyRefreshToken = (req: RequestExtended, res: Response, next: NextFunction): void => {
   const refreshToken = req.cookies.refreshToken;
   if (refreshToken === undefined) {
@@ -36,7 +38,7 @@ export const verifyRefreshToken = (req: RequestExtended, res: Response, next: Ne
     return
   }
     
-  jwt.verify(refreshToken, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+  jwt.verify(refreshToken, JWT_SECRET, (err: jwt.VerifyErrors | null, user: any) => {
     if (err) {
       res.sendStatus(403);
       return 

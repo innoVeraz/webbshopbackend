@@ -38,7 +38,6 @@ app.use('/stripe', stripeRouter);
 
 connectDB();
 
-// 🟡 Ingen vanlig `app.listen()` på Vercel!
-
-// ✅ Export för Vercel serverless function
-export default app;
+// VIKTIGT: Korrekt metod för Vercel-deployment
+// Detta exporterar hela Express-app instansen direkt
+module.exports = app;

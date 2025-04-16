@@ -2,8 +2,9 @@ import { Request, Response } from 'express';
 import Stripe from 'stripe';
 import { db } from "../config/db";
 
+// Uppdaterar till en giltig Stripe API-version
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-10-16'
+  apiVersion: '2022-11-15' as Stripe.LatestApiVersion
 });
 
 export const createCheckoutSession = async (req: Request, res: Response) => {
@@ -11,7 +12,6 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
     const { orderId, items } = req.body;
     
     console.log('Creating checkout session for order:', orderId, 'with items:', items);
-
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
@@ -37,7 +37,6 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       WHERE id = ?
     `;
     await db.query(updateOrderSql, [session.id, orderId]);
-
     res.json({ url: session.url, sessionId: session.id });
   } catch (error: any) {
     console.error('Stripe session creation error:', error);
@@ -48,22 +47,17 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
 export const handleWebhook = async (req: Request, res: Response) => {
   const sig = req.headers['stripe-signature'] as string;
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
   try {
     const event = stripe.webhooks.constructEvent(
       req.body,
       sig,
       endpointSecret || ''
     );
-
     console.log('Webhook event received:', event.type);
-
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
       const orderId = session.metadata?.orderId;
-
       console.log('Processing completed checkout for order:', orderId);
-
       if (orderId) {
         const updateOrderSql = `
           UPDATE orders 
@@ -71,14 +65,24 @@ export const handleWebhook = async (req: Request, res: Response) => {
           WHERE id = ?
         `;
         await db.query(updateOrderSql, ['paid', 'received', orderId]);
-
         const getOrderItemsSql = `
           SELECT product_id, quantity 
           FROM order_items 
           WHERE order_id = ?
         `;
-        const [orderItems] = await db.query(getOrderItemsSql, [orderId]);
-
+        
+        // Använder korrekt typning från mysql2
+        interface OrderItemRow {
+          product_id: number;
+          quantity: number;
+        }
+        
+        // Använd RowDataPacket[] istället för egen interface
+        const [orderItemsResult] = await db.query(getOrderItemsSql, [orderId]);
+        
+        // Behandla orderItemsResult som vanlig array
+        const orderItems = orderItemsResult as OrderItemRow[];
+        
         for (const item of orderItems) {
           const updateStockSql = `
             UPDATE products 
@@ -91,11 +95,9 @@ export const handleWebhook = async (req: Request, res: Response) => {
             item.quantity
           ]);
         }
-
         console.log('Order and inventory updated successfully:', orderId);
       }
     }
-
     res.json({ received: true });
   } catch (err: any) {
     console.error('Webhook error:', err.message);

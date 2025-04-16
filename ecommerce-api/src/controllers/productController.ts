@@ -3,6 +3,26 @@ import { db } from "../config/db";
 import { IProduct } from "../models/IProduct";
 import { logError } from "../utilities/logger";
 import { ResultSetHeader } from "mysql2";
+import { Readable } from "stream";
+
+// Anpassad typ som matchar multer.File korrekt
+interface MulterFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  destination: string;
+  filename: string;
+  path: string;
+  buffer: Buffer;
+  stream: Readable; // Lägger till stream som krävs av multer.File
+}
+
+// Använd ett annat sätt att utöka Request-typen som undviker kollisioner med multer.Request
+type RequestWithFile = Request & {
+  file?: MulterFile;
+};
 
 export const getProducts = async (_: any, res: Response) => { 
   try {
@@ -29,7 +49,7 @@ export const getProductById = async (req: Request, res: Response) => {
   }
 }
 
-export const createProduct = async (req: Request, res: Response) => {
+export const createProduct = async (req: RequestWithFile, res: Response) => {
   const { name, description, price, stock, category } = req.body;
   const imageBuffer = req.file?.buffer;
 
@@ -51,7 +71,7 @@ export const createProduct = async (req: Request, res: Response) => {
   }
 }
 
-export const updateProduct = async (req: Request, res: Response) => { 
+export const updateProduct = async (req: RequestWithFile, res: Response) => { 
   const id = req.params.id;
   const { name, description, price, stock, category } = req.body;
   const imageBuffer = req.file?.buffer;

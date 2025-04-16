@@ -7,6 +7,9 @@ import { logError } from "../utilities/logger";
 import { ResultSetHeader } from "mysql2";
 import { IUser } from "../models/IUser";
 
+// Säkerställ att JWT-secret finns
+const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET || 'fallback_secret_for_development';
+
 export const login = async (req: Request, res: Response): Promise<void> => {
   let user: IUser | null = null;
   const { username, password} = req.body;
@@ -33,7 +36,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
           created_at: user.created_at,
       }
       
-      const refreshToken = jwt.sign(userInfo, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '7d'});
+      const refreshToken = jwt.sign(userInfo, JWT_SECRET, {expiresIn: '7d'});
       res.cookie('refreshToken', refreshToken, {
           httpOnly: true,
           secure: false,
@@ -42,7 +45,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
           path: '/auth/refresh-token'
       });
       
-      const accessToken = jwt.sign(userInfo, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '15m'});
+      const accessToken = jwt.sign(userInfo, JWT_SECRET, {expiresIn: '15m'});
       res.json({
         success: true,
         user: {username: userInfo.username},
@@ -66,7 +69,7 @@ export const refreshToken = async (req: RequestExtended, res: Response): Promise
         username: req.user.username,
         created_at: req.user.created_at,
     }
-    const refreshToken = jwt.sign(userInfo, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '7d'});
+    const refreshToken = jwt.sign(userInfo, JWT_SECRET, {expiresIn: '7d'});
     res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: false,
@@ -74,7 +77,7 @@ export const refreshToken = async (req: RequestExtended, res: Response): Promise
         maxAge: 1000 * 60 * 60 * 24 * 7, 
         path: '/auth/refresh-token'
     });
-    const accessToken = jwt.sign(userInfo, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '15m'});
+    const accessToken = jwt.sign(userInfo, JWT_SECRET, {expiresIn: '15m'});
 
     res.json({
       user: {username: userInfo.username},
