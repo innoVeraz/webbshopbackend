@@ -4,6 +4,7 @@ import {connectDB} from "./config/db";
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import path from 'path';
+import { VercelRequest, VercelResponse } from "@vercel/node";
 
 dotenv.config();
 const app = express();
@@ -13,7 +14,7 @@ app.use('/stripe/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: ["http://localhost:3001", "http://localhost:3000"],
+  origin: "*", // Tillåt alla origins när den hostas på Vercel
   credentials: true,  // ✅ Allows cookies
 }));
 
@@ -37,7 +38,15 @@ app.use('/stripe', stripeRouter)
 
 connectDB();
 
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`The server is running at http://localhost:${PORT}`);
-});
+// Start Express server lokalt när det inte är på Vercel
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = 3000;
+  app.listen(PORT, () => {
+    console.log(`The server is running at http://localhost:${PORT}`);
+  });
+}
+
+// Exportera för Vercel serverless function
+export default (req: VercelRequest, res: VercelResponse) => {
+  return app(req, res);
+};
