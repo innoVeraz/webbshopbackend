@@ -3,6 +3,10 @@ import dotenv from 'dotenv'
 import mysql from 'mysql2/promise'
 dotenv.config()
 
+const ssl = process.env.AIVEN_CA_CERT
+  ? { ca: process.env.AIVEN_CA_CERT }
+  : undefined;
+
 // Databasanslutningskonfiguration med optimal molnstöd
 export const db = mysql.createPool({
   host:     process.env.DB_HOST,
@@ -15,7 +19,8 @@ export const db = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0, // Obegränsad kö
   enableKeepAlive: true,
-  keepAliveInitialDelay: 10000 // 10 sekunder
+  keepAliveInitialDelay: 10000, // 10 sekunder
+  ssl
 })
 
 export const connectDB = async () => {
