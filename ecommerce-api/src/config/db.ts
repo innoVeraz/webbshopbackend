@@ -3,8 +3,8 @@ import dotenv from 'dotenv'
 import mysql from 'mysql2/promise'
 dotenv.config()
 
-const ssl = process.env.AIVEN_CA_CERT
-  ? { ca: process.env.AIVEN_CA_CERT }
+const ssl: mysql.PoolOptions["ssl"] | undefined = process.env.AIVEN_CA_CERT
+  ? { ca: process.env.AIVEN_CA_CERT, rejectUnauthorized: true }
   : undefined;
 
 // Databasanslutningskonfiguration med optimal molnstöd
