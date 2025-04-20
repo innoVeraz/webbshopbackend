@@ -28,6 +28,7 @@ import orderRouter from "../src/routes/orders";
 import orderItemRouter from "../src/routes/orderItems";
 import authRouter from "../src/routes/auth";
 import stripeRouter from "../src/routes/stripe";
+import searchRouter from "../src/routes/search";
 
 // Lägg till en enkel testroute direkt i index.ts för felsökning
 app.get('/test', (req, res) => {
@@ -40,6 +41,7 @@ app.use('/orders', orderRouter);
 app.use('/order-items', orderItemRouter);
 app.use('/auth', authRouter);
 app.use('/stripe', stripeRouter);
+app.use('/search', searchRouter);
 
 connectDB();
 
