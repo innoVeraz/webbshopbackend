@@ -36,14 +36,8 @@ export const searchGoogle = async (req: Request, res: Response) => {
     
     const data = await response.json();
 
-    if (data.items && data.items[0]) {
-      console.log('FULL RESPONSE STRUCTURE FOR FIRST ITEM:');
-      console.log(JSON.stringify(data.items[0], null, 2));
-    }
-
     const fetchProductDetails = async (link: string) => {
       try {
-        console.log(`Fetching product details from: ${link}`);
         const response = await fetch(link, { 
           headers: { 
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -51,14 +45,11 @@ export const searchGoogle = async (req: Request, res: Response) => {
         });
         
         if (!response.ok) {
-          console.error(`Failed to fetch product page: ${response.status}`);
           return null;
         }
         
         const html = await response.text();
-        
-        // Försök hitta prisinformationen med olika metoder
-        // Metod 1: Leta efter typiska prismönster i HTML
+
         const pricePatterns = [
           /(\d+)\s*SEK/i,
           /price">\s*(\d[\d\s,.]*)\s*SEK/i,
@@ -76,14 +67,13 @@ export const searchGoogle = async (req: Request, res: Response) => {
               value: parseFloat(match[1].replace(/[\s,.]+/g, '')),
               currency: 'SEK'
             };
-            console.log(`Found price on product page: ${match[1]} => ${price.value} SEK`);
+  
             break;
           }
         }
         
         return price;
       } catch (error) {
-        console.error(`Error fetching product details: ${error}`);
         return null;
       }
     };
@@ -96,7 +86,6 @@ export const searchGoogle = async (req: Request, res: Response) => {
         displayLink: item.displayLink,
       };
 
-      // Försök hitta pris i Google API-resultatet först
       const priceRegexes = [
         /(\d+)\s*(SEK|EUR|USD|\$|€|kr)/i,
         /(\d+[\s\.,]\d+)\s*(SEK|EUR|USD|\$|€|kr)/i
@@ -148,16 +137,9 @@ export const searchGoogle = async (req: Request, res: Response) => {
 
       return result;
     }) || []);
-
-    console.log(`Found ${searchResults.length} search results`);
-    searchResults.forEach((result, index) => {
-      console.log(`Result ${index + 1}: ${result.title}`);
-      console.log(`  Price: ${result.price ? JSON.stringify(result.price) : 'No price found'}`);
-    });
     
     return res.status(200).json({ results: searchResults });
   } catch (error) {
-    console.error('Search controller error:', error);
     return res.status(500).json({ error: logError(error) });
   }
 };
